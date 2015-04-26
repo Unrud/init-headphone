@@ -1,0 +1,149 @@
+#!/usr/bin/env python2
+
+from __future__ import print_function
+import subprocess
+import os
+import sys
+
+SUPPORTED_SYSTEM_PRODUCT_NAMES = ["W230SS"]
+SUPPORTED_I2C_BUS_NAMES = ["SMBus I801 adapter at f040"]
+I2C_CLASS_PATH = "/sys/class/i2c-dev"
+CMDLINE_PATH = "/proc/cmdline"
+KERNEL_PARAMETER = "acpi_enforce_resources=lax"
+MODULES_PATH = "/proc/modules"
+DEVICE_ADDRESS = 0x73
+DATA = [
+#    CMD   Data0
+    [0x0A, 0x41],
+    [0x04, 0xEE],
+    [0x09, 0xFF],
+    [0x00, 0x86],
+    [0x04, 0xEE],
+    [0x05, 0x03],
+    [0x07, 0x40],
+    [0x08, 0x84],
+    [0x09, 0xFF],
+    [0x00, 0x82],
+]
+
+def get_system_product_name():
+    try:
+        return subprocess.check_output(["dmidecode", "-s", "system-product-name"]
+                                       ).strip()
+    except OSError:
+        print("Error: dmidecode is not installed", file=sys.stderr)
+        return False
+    except subprocess.CalledProcessError:
+        print("Error: dmidecode returned non-zero exit status", file=sys.stderr)
+        return False
+
+def get_i2c_busses():
+    busses = []
+    try:
+        i2c_directories = os.listdir(I2C_CLASS_PATH)
+    except OSError:
+        print("Error: Can't list directory I2C_CLASS_PATH (%s)" % I2C_CLASS_PATH,
+              file=sys.stderr)
+        return False
+    for i2c_dev in i2c_directories:
+        with open(os.path.join(I2C_CLASS_PATH, i2c_dev, "name")) as name_file:
+            i2c_dev_name = name_file.read().strip()
+        with open(os.path.join(I2C_CLASS_PATH, i2c_dev, "dev")) as dev_file:
+            i2c_dev_major, i2c_dev_minor = dev_file.read().strip().split(":")
+            i2c_dev_major = int(i2c_dev_major)
+            i2c_dev_minor = int(i2c_dev_minor)
+        busses.append((i2c_dev_name, i2c_dev_minor))
+    return busses
+
+def check_root():
+    if os.geteuid() != 0:
+        print("Warning: This program needs root privileges", file=sys.stderr)
+    return True
+
+def check_cmdline():
+    try:
+        cmdline_file = open(CMDLINE_PATH, "r")
+    except IOError:
+        print("Warning: Can't open file CMDLINE_PATH (%s)" % CMDLINE_PATH,
+              file=sys.stderr)
+        return True
+    cmdline_parameters = cmdline_file.read().split()
+    cmdline_file.close()
+    if KERNEL_PARAMETER not in cmdline_parameters:
+        print("Warning: Kernel parameter %s is missing" % KERNEL_PARAMETER,
+              file=sys.stderr)
+    return True
+
+def check_modules():
+    try:
+        modules_file = open(MODULES_PATH, "r")
+    except IOError:
+        print("Warning: Can't open file MODULES_PATH (%s)" % MODULES_PATH,
+              file=sys.stderr)
+        return True
+    module_i2c_dev_found = False
+    module_i2c_i801_found = False
+    for line in modules_file.readlines():
+        if "i2c_dev" == line.split()[0]:
+            module_i2c_dev_found = True
+        if "i2c_i801" == line.split()[0]:
+            module_i2c_i801_found = True
+    if not module_i2c_dev_found:
+        print("Warning: Module i2c_dev is not loaded", file=sys.stderr)
+    if not module_i2c_i801_found:
+        print("Warning: Module i2c_i801 is not loaded", file=sys.stderr)
+    return True
+
+def init_headphone():
+    try:
+        import smbus
+    except ImportError:
+        print("Error: Python module smbus not installed", file=sys.stderr)
+        return False
+    if  check_root() == False:
+        return False
+    system_product_name = get_system_product_name()
+    if system_product_name == False:
+        return False
+    if system_product_name not in SUPPORTED_SYSTEM_PRODUCT_NAMES:
+        print("Error: Unsupported system: %s" % system_product_name,
+              file=sys.stderr)
+        print("Supported systems:\n%s" % "".join(map(lambda e: "    %s\n" % e,
+                                                     SUPPORTED_SYSTEM_PRODUCT_NAMES)),
+              end="")
+        return False
+    if check_cmdline() == False:
+        return False
+    if check_modules() == False:
+        return False
+    i2c_busses = get_i2c_busses()
+    if i2c_busses == False:
+        return False
+    selected_i2c_bus_minor = None
+    selected_i2c_bus_name = None
+    for i2c_bus_name, i2c_bus_minor in i2c_busses:
+        if i2c_bus_name in SUPPORTED_I2C_BUS_NAMES:
+            selected_i2c_bus_minor = i2c_bus_minor
+            selected_i2c_bus_name = i2c_bus_name
+    if selected_i2c_bus_minor == None:
+        print("Error: Can't find i2c bus", file=sys.stderr)
+        print("Found:\n%s" % "".join(map(lambda e: "    %s\n" % e[0],
+                                         i2c_busses)), end="")
+        print("Looked for:\n%s" % "".join(map(lambda e: "    %s\n" % e,
+                                              SUPPORTED_I2C_BUS_NAMES)), end="")
+        return False
+
+    try:
+        i2c_bus = smbus.SMBus(selected_i2c_bus_minor)
+    except IOError:
+        print("Error: Can't access i2c bus (%s)" % selected_i2c_bus_name,
+              file=sys.stderr)
+        return False
+    for device_cmd, device_data in DATA:
+        i2c_bus.write_byte_data(DEVICE_ADDRESS, device_cmd, device_data)
+    i2c_bus.close()
+    return True
+
+if __name__ == "__main__":
+    success = init_headphone()
+    exit(0 if success else 1)
