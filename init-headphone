@@ -5,33 +5,133 @@ import subprocess
 import os
 import sys
 
-SUPPORTED_SYSTEM_PRODUCT_NAMES = ["W230SS"]
+__all__ = ["init_headphone", "set_mute", "set_effect"]
+
+VERSION = "0.3"
+SUPPORTED_SYSTEM_PRODUCT_NAMES = ["W230SS", "Mythlogic Chaos 1313-A", "HUMA H3"]
 SUPPORTED_I2C_BUS_NAMES = ["SMBus I801 adapter at f040"]
 I2C_CLASS_PATH = "/sys/class/i2c-dev"
 CMDLINE_PATH = "/proc/cmdline"
 KERNEL_PARAMETER = "acpi_enforce_resources=lax"
 MODULES_PATH = "/proc/modules"
+DMIDECODE_EXECUTABLE = "dmidecode"
 DEVICE_ADDRESS = 0x73
-DATA = [
+DATA_INIT = [
 #    CMD   Data0
-    [0x0A, 0x41],
-    [0x04, 0xEE],
-    [0x09, 0xFF],
+    [0x0a, 0x41],
+#   Read 0x04
+    [0x04, 0xee],
+#   Read 0x09
+    [0x09, 0xff],
     [0x00, 0x86],
-    [0x04, 0xEE],
+    [0x04, 0xee],
     [0x05, 0x03],
     [0x07, 0x40],
     [0x08, 0x84],
-    [0x09, 0xFF],
+    [0x09, 0xff],
     [0x00, 0x82],
 ]
-
+DATA_EFFECT_0 = [
+#    CMD   Data0
+    [0x00, 0x86],
+    [0x04, 0x11],
+    [0x05, 0x02],
+    [0x07, 0x22],
+    [0x08, 0x82],
+    [0x09, 0x22],
+    [0x00, 0x82],
+]
+DATA_EFFECT_1 = [
+#    CMD   Data0
+    [0x00, 0x86],
+    [0x04, 0xee],
+    [0x05, 0x03],
+    [0x07, 0x40],
+    [0x08, 0x84],
+    [0x09, 0xff],
+    [0x00, 0x82],
+]
+DATA_EFFECT_2 = [
+#    CMD   Data0
+    [0x00, 0x86],
+    [0x04, 0xaa],
+    [0x05, 0x23],
+    [0x07, 0x40],
+    [0x08, 0x84],
+    [0x09, 0x00],
+    [0x00, 0x82],
+]
+DATA_EFFECT_3 = [
+#    CMD   Data0
+    [0x00, 0x86],
+    [0x04, 0xaa],
+    [0x05, 0x22],
+    [0x07, 0x33],
+    [0x08, 0x84],
+    [0x09, 0x00],
+    [0x00, 0x82],
+]
+DATA_EFFECT_4 = [
+#    CMD   Data0
+    [0x00, 0x86],
+    [0x04, 0x88],
+    [0x05, 0x03],
+    [0x07, 0x23],
+    [0x08, 0x82],
+    [0x09, 0x22],
+    [0x00, 0x82],
+]
+DATA_EFFECT_5 = [
+#    CMD   Data0
+    [0x00, 0x86],
+    [0x04, 0xaa],
+    [0x05, 0x23],
+    [0x07, 0x41],
+    [0x08, 0x84],
+    [0x09, 0x00],
+    [0x00, 0x82],
+]
+DATA_EFFECT_6 = [
+#    CMD   Data0
+    [0x00, 0x86],
+    [0x04, 0xaa],
+    [0x05, 0x02],
+    [0x07, 0x43],
+    [0x08, 0x82],
+    [0x09, 0x00],
+    [0x00, 0x82],
+]
+DATA_MUTE = [
+#    CMD   Data0
+    [0x0a, 0x41],
+#   Read 0x04
+    [0x04, 0xee],
+#   Read 0x09
+    [0x09, 0xff],
+#   Read 0x00
+    [0x00, 0x86],
+]
+DATA_UNMUTE = [
+#    CMD   Data0
+#   Read 0x00
+    [0x00, 0x82],
+]
+DATA_RECOVERY = [
+#    CMD   Data0
+    [0x0a, 0x41],
+#   Read 0x04
+    [0x04, 0xee],
+#   Read 0x09
+    [0x09, 0xff],
+    [0x0b, 0x82],
+    [0x0b, 0x92],
+]
 def get_system_product_name():
     try:
-        return subprocess.check_output(["dmidecode", "-s", "system-product-name"]
-                                       ).strip()
+        return subprocess.check_output([DMIDECODE_EXECUTABLE, "-s",
+                                       "system-product-name"]).strip()
     except OSError:
-        print("Error: dmidecode is not installed", file=sys.stderr)
+        print("Error: dmidecode not found", file=sys.stderr)
         return False
     except subprocess.CalledProcessError:
         print("Error: dmidecode returned non-zero exit status", file=sys.stderr)
@@ -94,7 +194,7 @@ def check_modules():
         print("Warning: Module i2c_i801 is not loaded", file=sys.stderr)
     return True
 
-def init_headphone():
+def get_bus():
     try:
         import smbus
     except ImportError:
@@ -132,18 +232,77 @@ def init_headphone():
         print("Looked for:\n%s" % "".join(map(lambda e: "    %s\n" % e,
                                               SUPPORTED_I2C_BUS_NAMES)), end="")
         return False
-
     try:
         i2c_bus = smbus.SMBus(selected_i2c_bus_minor)
     except IOError:
         print("Error: Can't access i2c bus (%s)" % selected_i2c_bus_name,
               file=sys.stderr)
         return False
-    for device_cmd, device_data in DATA:
+    return i2c_bus
+
+def send_data(data):
+    i2c_bus = get_bus()
+    if i2c_bus == False:
+        return False
+    for device_cmd, device_data in data:
         i2c_bus.write_byte_data(DEVICE_ADDRESS, device_cmd, device_data)
     i2c_bus.close()
     return True
 
+def init_headphone():
+    return send_data(DATA_INIT)
+
+def set_mute(b):
+    if b:
+        return send_data(DATA_MUTE)
+    else:
+        return send_data(DATA_UNMUTE)
+
+def set_effect(i):
+    if i == 0:
+        return send_data(DATA_EFFECT_0)
+    elif i == 1:
+        return send_data(DATA_EFFECT_1)
+    elif i == 2:
+        return send_data(DATA_EFFECT_2)
+    elif i == 3:
+        return send_data(DATA_EFFECT_3)
+    elif i == 4:
+        return send_data(DATA_EFFECT_4)
+    elif i == 5:
+        return send_data(DATA_EFFECT_5)
+    elif i == 6:
+        return send_data(DATA_EFFECT_6)
+    else:
+        print("Error: Invalid effect", file=sys.stderr)
+        return False
+
+def print_help(executable):
+    print("Version: %s" % VERSION)
+    for cmd in ("[init]", "effect0", "effect1", "effect2", "effect3", "effect4",
+                "effect5", "effect6", "mute", "unmute", "--help"):
+        print("usage: %s %s" % (executable, cmd))
+
+def main(argv):
+    executable=os.path.basename(argv[0])
+    if len(argv) == 1 or len(argv) == 2 and argv[1] == "init":
+        return init_headphone()
+    elif len(argv) == 2 and argv[1] in ("effect0", "effect1", "effect2", "effect3",
+                                      "effect4", "effect5", "effect6"):
+        effect_index = int(argv[1][len("effect"):])
+        return set_effect(effect_index)
+    elif len(argv) == 2 and argv[1] == "mute":
+        return set_mute(True)
+    elif len(argv) == 2 and argv[1] == "unmute":
+        return set_mute(False)
+    elif len(argv) == 2 and argv[1] == "--help":
+        print_help(executable)
+        return True
+    else:
+        print_help(executable)
+        return False
+        
+
 if __name__ == "__main__":
-    success = init_headphone()
+    success = main(sys.argv)
     exit(0 if success else 1)
