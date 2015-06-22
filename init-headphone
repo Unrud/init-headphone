@@ -10,7 +10,7 @@ import locale
 __all__ = ["init_headphone", "set_mute", "set_effect"]
 
 VERSION = "0.5"
-SUPPORTED_SYSTEM_PRODUCT_NAMES = ["W230SS", "W230SD", "Mythlogic Chaos 1313-A", "HUMA H3"]
+SUPPORTED_SYSTEM_PRODUCT_NAMES = ["W230SS", "W230SD", "Mythlogic Chaos 1313-A", "HUMA H3", "M4"]
 SUPPORTED_I2C_BUS_NAMES = ["SMBus I801 adapter at f040"]
 I2C_CLASS_PATH = "/sys/class/i2c-dev"
 DEV_BASE_PATH = "/dev"
