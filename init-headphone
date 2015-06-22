@@ -9,7 +9,7 @@ import locale
 
 __all__ = ["init_headphone", "set_mute", "set_effect"]
 
-VERSION = "0.5"
+VERSION = "0.6"
 SUPPORTED_SYSTEM_PRODUCT_NAMES = [
     "W230SS",  # Clevo W230SS
     "Mythlogic Chaos 1313-A",  # Mythlogic Chaos 1313-A

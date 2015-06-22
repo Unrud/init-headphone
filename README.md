@@ -6,7 +6,7 @@ Enable headphone jack on Clevo W230SS and W230SD after suspend
 ## Usage
 ```
 $ init-headphone --help
-Version: 0.5
+Version: 0.6
 usage: init-headphone [init]
 usage: init-headphone effect0
 usage: init-headphone effect1
