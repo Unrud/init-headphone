@@ -132,6 +132,7 @@ DATA_RECOVERY = [
 I2C_SLAVE = 0x0703
 I2C_SMBUS = 0x0720
 I2C_SMBUS_BLOCK_MAX = 32
+I2C_SMBUS_READ = 1
 I2C_SMBUS_WRITE = 0
 I2C_SMBUS_BYTE_DATA = 2
 
@@ -149,40 +150,61 @@ class i2c_smbus_ioctl_data(ctypes.Structure):
                 ("data", ctypes.POINTER(i2c_smbus_data))]
 
 
-class SMBus:
-    def __init__(self, _file):
+class SMBus(object):
+    def __init__(self, path):
         self.__logger = logging.getLogger("SMBus")
-        self.__logger.info("Opening I2C bus: %s" % _file)
+        self.__logger.info("Opening I2C bus: %s" % path)
         try:
-            self._fd = os.open(_file, os.O_RDWR)
+            self.__fd = os.open(path, os.O_RDWR)
         except Exception as e:
-            self.__logger.error("Can't open file (%s)" % _file)
+            self.__logger.error("Can't open file (%s)" % path)
             raise e
-        self._libc = ctypes.cdll.LoadLibrary("libc.so.6")
-        self._address = 0
+        self.__libc = ctypes.cdll.LoadLibrary("libc.so.6")
+        self.__address = None
 
-    def write_byte_data(self, address, command, value):
-        self.__logger.info("Writing byte data on I2C bus (command: 0x%x, value: 0x%x)" % (command, value))
-        if address != self._address:
-            err = self._libc.ioctl(self._fd, I2C_SLAVE, address)
+    @property
+    def address(self):
+        return self.__address
+
+    @address.setter
+    def address(self, address):
+        self.__logger.info("Setting I2C slave address to %d" % address)
+        if self.__address != address:
+            err = self.__libc.ioctl(self.__fd, I2C_SLAVE, address)
             if err != 0:
                 self.__logger.error("Can't set I2C slave address")
                 raise RuntimeError("Can't set I2C slave address")
-            self._address = address
-        data = i2c_smbus_data()
-        data.byte = value
+            self.__address = address
+
+    def __access(self, read_write, device_cmd, size, data):
+        if self.__address is None:
+            self.__logger.error("No I2C slave address set")
+            raise RuntimeError("No I2C slave address set")
         args = i2c_smbus_ioctl_data()
-        args.read_write = I2C_SMBUS_WRITE
-        args.command = command
-        args.size = I2C_SMBUS_BYTE_DATA
+        args.read_write = read_write
+        args.command = device_cmd
+        args.size = size
         args.data = ctypes.pointer(data)
-        if self._libc.ioctl(self._fd, I2C_SMBUS, ctypes.byref(args)) != 0:
+        if self.__libc.ioctl(self.__fd, I2C_SMBUS, ctypes.byref(args)) != 0:
             self.__logger.error("Can't transfer data on I2C bus")
             raise RuntimeError("Can't transfer data on I2C bus")
 
+    def write_byte_data(self, device_cmd, value):
+        self.__logger.info("Writing byte data on I2C bus (device_cmd: 0x%x, value: 0x%x)" % (device_cmd, value))
+        data = i2c_smbus_data()
+        data.byte = value
+        self.__access(I2C_SMBUS_WRITE, device_cmd, I2C_SMBUS_BYTE_DATA, data)
+
+    def read_byte_data(self, device_cmd):
+        data = i2c_smbus_data()
+        self.__access(I2C_SMBUS_READ, device_cmd, I2C_SMBUS_BYTE_DATA, data)
+        result = data.byte & 0xff
+        self.__logger.info("Read byte data on I2C bus (device_cmd: 0x%x, value: 0x%x)" % (device_cmd, result))
+        return result
+
     def close(self):
         self.__logger.info("Closing I2C bus")
-        os.close(self._fd)
+        os.close(self.__fd)
 
 
 def get_baseboard_product_name():
@@ -268,7 +290,7 @@ def get_i2c_busses():
     return busses
 
 
-def get_bus():
+def do_checks_and_get_i2c_bus_with_address_configured():
     check_root()
     check_baseboard_product_name()
     check_cmdline()
@@ -283,13 +305,14 @@ def get_bus():
         raise RuntimeError("Can't find i2c bus")
     i2c_dev_file = os.path.join(DEV_BASE_PATH, selected_i2c_dev)
     i2c_bus = SMBus(i2c_dev_file)
+    i2c_bus.address = DEVICE_ADDRESS
     return i2c_bus
 
 
 def write_data(data):
-    i2c_bus = get_bus()
+    i2c_bus = do_checks_and_get_i2c_bus_with_address_configured()
     for device_cmd, device_data in data:
-        i2c_bus.write_byte_data(DEVICE_ADDRESS, device_cmd, device_data)
+        i2c_bus.write_byte_data(device_cmd, device_data)
     i2c_bus.close()
 
 
