@@ -6,6 +6,7 @@ import os
 import sys
 import ctypes
 import locale
+import logging
 
 __all__ = ["init_headphone", "set_mute", "set_effect"]
 
@@ -129,14 +130,6 @@ I2C_SMBUS_WRITE = 0
 I2C_SMBUS_BYTE_DATA = 2
 
 
-def dbg_warn(msg):
-    print("Warning: %s" % msg, file=sys.stderr)
-
-
-def dbg_err(msg):
-    print("Error: %s" % msg, file=sys.stderr)
-
-
 class i2c_smbus_data(ctypes.Union):
     _fields_ = [("byte", ctypes.c_ubyte),
                 ("word", ctypes.c_ushort),
@@ -152,19 +145,22 @@ class i2c_smbus_ioctl_data(ctypes.Structure):
 
 class SMBus:
     def __init__(self, _file):
+        self.__logger = logging.getLogger("SMBus")
+        self.__logger.info("Opening I2C bus: %s" % _file)
         try:
             self._fd = os.open(_file, os.O_RDWR)
         except Exception as e:
-            dbg_err("Can't open file (%s)" % _file)
+            self.__logger.error("Can't open file (%s)" % _file)
             raise e
         self._libc = ctypes.cdll.LoadLibrary("libc.so.6")
         self._address = 0
-    
+
     def write_byte_data(self, address, command, value):
+        self.__logger.info("Writing byte data on I2C bus (command: 0x%x, value: 0x%x)" % (command, value))
         if address != self._address:
             err = self._libc.ioctl(self._fd, I2C_SLAVE, address)
             if err != 0:
-                dbg_err("Can't set I2C slave address")
+                self.__logger.error("Can't set I2C slave address")
                 raise RuntimeError("Can't set I2C slave address")
             self._address = address
         data = i2c_smbus_data()
@@ -175,10 +171,11 @@ class SMBus:
         args.size = I2C_SMBUS_BYTE_DATA
         args.data = ctypes.pointer(data)
         if self._libc.ioctl(self._fd, I2C_SMBUS, ctypes.byref(args)) != 0:
-            dbg_err("Can't transfer data on I2C bus")
+            self.__logger.error("Can't transfer data on I2C bus")
             raise RuntimeError("Can't transfer data on I2C bus")
-    
+
     def close(self):
+        self.__logger.info("Closing I2C bus")
         os.close(self._fd)
 
 
@@ -188,10 +185,10 @@ def get_baseboard_product_name():
                                        "baseboard-product-name"])
         return name.strip().decode(locale.getpreferredencoding())
     except subprocess.CalledProcessError as e:
-        dbg_err("dmidecode returned non-zero exit status")
+        logging.error("dmidecode returned non-zero exit status")
         raise e
     except Exception as e:
-        dbg_err("dmidecode not found")
+        logging.error("dmidecode not found")
         raise e
 
 
@@ -203,37 +200,37 @@ def check_baseboard_product_name():
             found = True
             break
     if not found:
-        dbg_err("Unsupported system (%s)" % baseboard_product_name)
+        logging.error("Unsupported system (%s)" % baseboard_product_name)
         raise RuntimeError("Unsupported system")
 
 
 def check_root():
     if os.geteuid() != 0:
-        dbg_warn("This program needs root privileges")
+        logging.warning("This program needs root privileges")
 
 
 def check_cmdline():
     try:
         cmdline_file = open(CMDLINE_PATH, "r")
     except:
-        dbg_warn("Can't open file (%s)" % CMDLINE_PATH)
+        logging.warning("Can't open file (%s)" % CMDLINE_PATH)
         return
     cmdline_parameters = cmdline_file.read().split()
     cmdline_file.close()
     if KERNEL_PARAMETER not in cmdline_parameters:
-        dbg_warn("Kernel parameter is missing (%s)" % KERNEL_PARAMETER)
+        logging.warning("Kernel parameter is missing (%s)" % KERNEL_PARAMETER)
 
 
 def check_modules():
     try:
         modules_file = open(MODULES_PATH, "r")
     except:
-        dbg_warn("Can't open file (%s)")
+        logging.warning("Can't open file (%s)")
         return
     loaded_modules = [line.split()[0] for line in modules_file.readlines()]
     for required_module in REQUIRED_MODULES:
         if required_module not in loaded_modules:
-            dbg_warn("Module is not loaded (%s)" % required_module)
+            logging.warning("Module is not loaded (%s)" % required_module)
 
 
 def get_i2c_busses():
@@ -241,7 +238,7 @@ def get_i2c_busses():
     try:
         i2c_directories = os.listdir(I2C_CLASS_PATH)
     except Exception as e:
-        dbg_err("Can't list directory (%s)" % I2C_CLASS_PATH)
+        logging.error("Can't list directory (%s)" % I2C_CLASS_PATH)
         raise e
     for i2c_dev in i2c_directories:
         _file = os.path.join(I2C_CLASS_PATH, i2c_dev, "name")
@@ -249,7 +246,7 @@ def get_i2c_busses():
             with open(_file) as name_file:
                 i2c_dev_name = name_file.read().strip()
         except Exception as e:
-            dbg_warn("Can't open file (%s)" % _file)
+            logging.warning("Can't open file (%s)" % _file)
             continue
         busses.append((i2c_dev_name, i2c_dev))
     return busses
@@ -266,7 +263,7 @@ def get_bus():
         if i2c_bus_name in SUPPORTED_I2C_BUS_NAMES:
             selected_i2c_dev = i2c_dev
     if selected_i2c_dev is None:
-        dbg_err("Can't find i2c bus")
+        logging.error("Can't find i2c bus")
         raise RuntimeError("Can't find i2c bus")
     i2c_dev_file = os.path.join(DEV_BASE_PATH, selected_i2c_dev)
     i2c_bus = SMBus(i2c_dev_file)
@@ -307,7 +304,7 @@ def set_effect(i):
     elif i == 6:
         write_data(DATA_EFFECT_6)
     else:
-        dbg_err("Invalid effect")
+        logging.error("Invalid effect")
         raise ValueError("Invalid effect")
 
 
@@ -341,5 +338,5 @@ if __name__ == "__main__":
     try:
         main(sys.argv)
     except Exception as e:
-        dbg_err("Operation failed")
+        logging.exception("Operation failed")
         exit(1)
