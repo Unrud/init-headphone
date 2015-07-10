@@ -8,6 +8,7 @@ import ctypes
 import locale
 import functools
 import logging
+import argparse
 
 __all__ = ["init_headphone", "set_mute", "set_effect"]
 
@@ -288,35 +289,68 @@ def set_effect(i):
     write_data(i2c_bus, DATA_EFFECTS[i])
 
 
-def print_help(executable):
-    print("Version: %s" % VERSION)
-    for cmd in ("[init]", "effect0", "effect1", "effect2", "effect3", "effect4",
-                "effect5", "effect6", "mute", "unmute", "--help"):
-        print("usage: %s %s" % (executable, cmd))
+def parse_args():
+    MAX_OUTPUT_WIDTH = 80
+    commands_help = {
+        "init": "initialize amplifier (with effect1)",
+        "mute": "turn output off",
+        "unmute": "turn output on",
+    }
+    for i in EFFECTS_INFO:
+        commands_help["effect%d" % i] = EFFECTS_INFO[i]
+    commands = (["init"] + ["effect%d" % i for i in range(len(DATA_EFFECTS))] +
+                ["mute", "unmute"])
+    epilog = "\navailable commands:\n"
+    for command in commands:
+        command_help = commands_help.get(command)
+        if command_help:
+            epilog += "  %- 15s%s\n" % (command, command_help)
+        else:
+            epilog += "  %s\n" % command
+    epilog += "\nsupported models:\n"
+    line = ""
+    for i in range(len(SUPPORTED_BASEBOARD_PRODUCT_NAMES)):
+        model = SUPPORTED_BASEBOARD_PRODUCT_NAMES[i]
+        if i < len(SUPPORTED_BASEBOARD_PRODUCT_NAMES) - 1:
+            model += ", "
+        if len(line) + len(model) > MAX_OUTPUT_WIDTH - len("  "):
+            epilog += "  %s\n" % line
+            line = ""
+        line += model
+    epilog += "  %s\n" % line
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description='Manage the headphone amplifier found in some Clevo laptops '
+                    '(see the list of supported models below)', epilog=epilog)
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                        action="store_true")
+    parser.add_argument("command", nargs="?", choices=commands, metavar="command",
+                        default="init",
+                        help="see the list of available commands below, "
+                             "init is the default if the argument is omitted")
+    args = parser.parse_args()
+    return args
 
 
-def main(argv):
-    executable = os.path.basename(argv[0])
-    if len(argv) == 1 or len(argv) == 2 and argv[1] == "init":
+def main():
+    args = parse_args()
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    command = args.command
+    if command == "init":
         init_headphone()
-    elif len(argv) == 2 and argv[1] in ("effect0", "effect1", "effect2", "effect3",
-                                        "effect4", "effect5", "effect6"):
-        effect_index = int(argv[1][len("effect"):])
-        set_effect(effect_index)
-    elif len(argv) == 2 and argv[1] == "mute":
+    elif command.startswith("effect"):
+        i = int(command[len("effect"):])
+        set_effect(i)
+    elif command == "mute":
         set_mute(True)
-    elif len(argv) == 2 and argv[1] == "unmute":
+    elif command == "unmute":
         set_mute(False)
-    elif len(argv) == 2 and argv[1] == "--help":
-        print_help(executable)
-    else:
-        print_help(executable)
-        raise RuntimeError("Invalid arguments")
 
 
 if __name__ == "__main__":
     try:
-        main(sys.argv)
+        main()
     except Exception as e:
         logging.exception("Operation failed")
         exit(1)
