@@ -31,18 +31,12 @@ MODULES_PATH = "/proc/modules"
 REQUIRED_MODULES = ["i2c_dev", "i2c_i801"]
 DMIDECODE_EXECUTABLE = "dmidecode"
 DEVICE_ADDRESS = 0x73
-DATA_INIT = [
-    [0x0a, 0x41],
-    # Read 0x04
-    [0x04, 0xee],
-    # Read 0x09
-    [0x09, 0xff],
+DATA_DISABLE_OUTPUT = [
+#    CMD   Value
     [0x00, 0x86],
-    [0x04, 0xee],
-    [0x05, 0x03],
-    [0x07, 0x40],
-    [0x08, 0x84],
-    [0x09, 0xff],
+]
+DATA_ENABLE_OUTPUT = [
+#    CMD   Value
     [0x00, 0x82],
 ]
 DATA_EFFECTS = list(map(lambda a: list(zip([0x04, 0x05, 0x07, 0x08, 0x09], a)), [
@@ -61,29 +55,12 @@ EFFECTS_INFO = {
     1: "bass boost",
     4: "boost everything",
 }
-DATA_MUTE = [
-    [0x0a, 0x41],
-    # Read 0x04
-    [0x04, 0xee],
-    # Read 0x09
-    [0x09, 0xff],
-    # Read 0x00
-    [0x00, 0x86],
-]
-DATA_UNMUTE = [
-    # Read 0x00
-    [0x00, 0x82],
-]
 DATA_RECOVERY = [
-    # CMD   Data0
-    [0x0a, 0x41],
-    # Read 0x04
-    [0x04, 0xee],
-    # Read 0x09
-    [0x09, 0xff],
+#    CMD   Value
     [0x0b, 0x82],
     [0x0b, 0x92],
 ]
+DEFAULT_EFFECT = 1
 I2C_SLAVE = 0x0703
 I2C_SMBUS = 0x0720
 I2C_SMBUS_BLOCK_MAX = 32
@@ -245,7 +222,7 @@ def get_i2c_busses():
     return busses
 
 
-def do_checks_and_get_i2c_bus_with_address_configured():
+def do_checks_and_get_i2c_bus():
     check_root()
     check_baseboard_product_name()
     check_cmdline()
@@ -260,33 +237,45 @@ def do_checks_and_get_i2c_bus_with_address_configured():
         raise RuntimeError("Can't find i2c bus")
     i2c_dev_file = os.path.join(DEV_BASE_PATH, selected_i2c_dev)
     i2c_bus = SMBus(i2c_dev_file)
-    i2c_bus.address = DEVICE_ADDRESS
     return i2c_bus
 
 
-def write_data(data):
-    i2c_bus = do_checks_and_get_i2c_bus_with_address_configured()
-    for device_cmd, device_data in data:
-        i2c_bus.write_byte_data(device_cmd, device_data)
-    i2c_bus.close()
+def prolog(i2c_bus):
+    i2c_bus.write_byte_data(0x0a, 0x41)
+    for device_cmd in [0x04, 0x09]:
+        value = i2c_bus.read_byte_data(device_cmd)
+        i2c_bus.write_byte_data(device_cmd, value)
+
+
+def write_data_to_device(data):
+    i2c_bus = do_checks_and_get_i2c_bus()
+    try:
+        i2c_bus.address = DEVICE_ADDRESS
+        prolog(i2c_bus)
+        for device_cmd, device_data in data:
+            i2c_bus.write_byte_data(device_cmd, device_data)
+    finally:
+        i2c_bus.close()
 
 
 def init_headphone():
-    write_data(DATA_INIT)
+    set_effect(DEFAULT_EFFECT)
 
 
 def set_mute(b):
     if b:
-        write_data(DATA_MUTE)
+        write_data_to_device(DATA_DISABLE_OUTPUT)
     else:
-        write_data(DATA_UNMUTE)
+        write_data_to_device(DATA_ENABLE_OUTPUT)
 
 
 def set_effect(i):
     if i < 0 or i >= len(DATA_EFFECTS):
         logging.error("Invalid effect")
         raise ValueError("Invalid effect")
-    write_data(i2c_bus, DATA_EFFECTS[i])
+    write_data_to_device(DATA_DISABLE_OUTPUT +
+                         DATA_EFFECTS[i] +
+                         DATA_ENABLE_OUTPUT)
 
 
 def parse_args():
