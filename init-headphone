@@ -13,7 +13,12 @@ __all__ = ["init_headphone", "set_mute", "set_effect"]
 VERSION = "0.6"
 SUPPORTED_BASEBOARD_PRODUCT_NAMES = [
 #   x is used as wildcard
-    "W230SS", "W230SD"
+    "N1xxSD", "P37xSM-A", "P65xSE", "P770ZM", "W130SV", "W230SD", "W230SS",
+    "W25CSx", "W330AU", "W330SU2", "W355SDQ", "W3xxSS", "W510TU", "W510TU-L",
+    "W5xxSU2", "W650SF", "W670SFQ", "W6xxSB", "W840AU", "W942SV", "W942SW",
+    "W945SUW", "W94xTU", "W94xTU-L", "W95xTU", "W970KLQ", "W970SUW", "W970SUY",
+    "W970TUQ", "W9xxAUx", "W9xxKL", "W9xxKU", "W9xxSU1", "W9xxSU2", "WA50SBQ",
+    "WA50SFQ", "WA50SJQ"
 ]
 SUPPORTED_I2C_BUS_NAMES = ["SMBus I801 adapter at f040"]
 I2C_CLASS_PATH = "/sys/class/i2c-dev"
