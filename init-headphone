@@ -24,7 +24,7 @@ SUPPORTED_BASEBOARD_PRODUCT_NAMES = [
 ]
 SUPPORTED_I2C_BUS_NAMES = ["SMBus I801 adapter at f040"]
 I2C_CLASS_PATH = "/sys/class/i2c-dev"
-DEV_BASE_PATH = "/dev"
+DEV_PATH = "/dev"
 CMDLINE_PATH = "/proc/cmdline"
 KERNEL_PARAMETER = "acpi_enforce_resources=lax"
 MODULES_PATH = "/proc/modules"
@@ -235,7 +235,7 @@ def do_checks_and_get_i2c_bus():
     if selected_i2c_dev is None:
         logging.error("Can't find i2c bus")
         raise RuntimeError("Can't find i2c bus")
-    i2c_dev_file = os.path.join(DEV_BASE_PATH, selected_i2c_dev)
+    i2c_dev_file = os.path.join(DEV_PATH, selected_i2c_dev)
     i2c_bus = SMBus(i2c_dev_file)
     return i2c_bus
 
