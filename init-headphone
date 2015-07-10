@@ -330,6 +330,7 @@ def main():
     args = parse_args()
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+    logging.info("version %s" % VERSION)
     command = args.command
     if command == "init":
         init()
