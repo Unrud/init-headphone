@@ -12,6 +12,7 @@ __all__ = ["init_headphone", "set_mute", "set_effect"]
 
 VERSION = "0.6"
 SUPPORTED_BASEBOARD_PRODUCT_NAMES = [
+#   x is used as wildcard
     "W230SS", "W230SD"
 ]
 SUPPORTED_I2C_BUS_NAMES = ["SMBus I801 adapter at f040"]
@@ -193,14 +194,24 @@ def get_baseboard_product_name():
 
 
 def check_baseboard_product_name():
-    baseboard_product_name = get_baseboard_product_name()
+    def compare_with_wildcards(supported_name, name):
+        if len(supported_name) != len(name):
+            return False
+        for i in range(len(supported_name)):
+            if supported_name[i] == "x":
+                continue
+            if supported_name[i] != name[i]:
+                return False
+        return True
+
+    name = get_baseboard_product_name()
     found = False
-    for supported_baseboard_product_name in SUPPORTED_BASEBOARD_PRODUCT_NAMES:
-        if supported_baseboard_product_name == baseboard_product_name:
+    for supported_name in SUPPORTED_BASEBOARD_PRODUCT_NAMES:
+        if compare_with_wildcards(supported_name, name):
             found = True
             break
     if not found:
-        logging.error("Unsupported system (%s)" % baseboard_product_name)
+        logging.error("Unsupported system (%s)" % name)
         raise RuntimeError("Unsupported system")
 
 
