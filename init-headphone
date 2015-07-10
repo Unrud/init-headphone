@@ -10,7 +10,7 @@ import functools
 import logging
 import argparse
 
-__all__ = ["init_headphone", "set_mute", "set_effect"]
+__all__ = ["init", "set_mute", "set_effect"]
 
 VERSION = "0.6"
 SUPPORTED_BASEBOARD_PRODUCT_NAMES = [
@@ -258,7 +258,7 @@ def write_data_to_device(data):
         i2c_bus.close()
 
 
-def init_headphone():
+def init():
     set_effect(DEFAULT_EFFECT)
 
 
@@ -327,7 +327,7 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
     command = args.command
     if command == "init":
-        init_headphone()
+        init()
     elif command.startswith("effect"):
         i = int(command[len("effect"):])
         set_effect(i)
