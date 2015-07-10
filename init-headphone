@@ -313,7 +313,7 @@ def parse_args():
     epilog += "  %s\n" % line
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description='Manage the headphone amplifier found in some Clevo laptops '
+        description='Manage the headphone amplifier found in some Clevo laptops\n'
                     '(see the list of supported models below)\n\n'
                     'version: %s' % VERSION, epilog=epilog)
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
