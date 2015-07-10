@@ -10,7 +10,7 @@ import functools
 import logging
 import argparse
 
-__all__ = ["init", "set_mute", "set_effect"]
+__all__ = ["init", "set_mute", "set_effect", "recovery"]
 
 VERSION = "0.6"
 SUPPORTED_BASEBOARD_PRODUCT_NAMES = [
@@ -278,6 +278,10 @@ def set_effect(i):
                          DATA_ENABLE_OUTPUT)
 
 
+def recovery():
+    write_data_to_device(DATA_RECOVERY)
+
+
 def parse_args():
     MAX_OUTPUT_WIDTH = 80
     commands_help = {
@@ -288,7 +292,7 @@ def parse_args():
     for i in EFFECTS_INFO:
         commands_help["effect%d" % i] = EFFECTS_INFO[i]
     commands = (["init"] + ["effect%d" % i for i in range(len(DATA_EFFECTS))] +
-                ["mute", "unmute"])
+                ["mute", "unmute", "recovery"])
     epilog = "\navailable commands:\n"
     for command in commands:
         command_help = commands_help.get(command)
@@ -335,6 +339,8 @@ def main():
         set_mute(True)
     elif command == "unmute":
         set_mute(False)
+    elif command == "recovery":
+        recovery()
 
 
 if __name__ == "__main__":
