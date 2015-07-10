@@ -117,7 +117,8 @@ class SMBus(object):
         args.command = device_cmd
         args.size = size
         args.data = ctypes.pointer(data)
-        if self.__libc.ioctl(self.__fd, I2C_SMBUS, ctypes.byref(args)) != 0:
+        err = self.__libc.ioctl(self.__fd, I2C_SMBUS, ctypes.byref(args))
+        if err != 0:
             self.__logger.error("Can't transfer data on I2C bus")
             raise RuntimeError("Can't transfer data on I2C bus")
 
@@ -211,12 +212,12 @@ def get_i2c_busses():
         logging.error("Can't list directory (%s)" % I2C_CLASS_PATH)
         raise e
     for i2c_dev in i2c_directories:
-        _file = os.path.join(I2C_CLASS_PATH, i2c_dev, "name")
+        path = os.path.join(I2C_CLASS_PATH, i2c_dev, "name")
         try:
-            with open(_file) as name_file:
+            with open(path) as name_file:
                 i2c_dev_name = name_file.read().strip()
         except Exception as e:
-            logging.warning("Can't open file (%s)" % _file)
+            logging.warning("Can't open file (%s)" % path)
             continue
         busses.append((i2c_dev_name, i2c_dev))
     return busses
@@ -235,8 +236,8 @@ def do_checks_and_get_i2c_bus():
     if selected_i2c_dev is None:
         logging.error("Can't find i2c bus")
         raise RuntimeError("Can't find i2c bus")
-    i2c_dev_file = os.path.join(DEV_PATH, selected_i2c_dev)
-    i2c_bus = SMBus(i2c_dev_file)
+    i2c_dev_path = os.path.join(DEV_PATH, selected_i2c_dev)
+    i2c_bus = SMBus(i2c_dev_path)
     return i2c_bus
 
 
