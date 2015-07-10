@@ -12,7 +12,7 @@ import argparse
 
 __all__ = ["init", "set_mute", "set_effect", "recovery"]
 
-VERSION = "0.6"
+VERSION = "0.7"
 SUPPORTED_BASEBOARD_PRODUCT_NAMES = [
 #   x is used as wildcard
     "N1xxSD", "P37xSM-A", "P65xSE", "P770ZM", "W130SV", "W230SD", "W230SS",
