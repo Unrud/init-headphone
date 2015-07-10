@@ -10,12 +10,8 @@ import locale
 __all__ = ["init_headphone", "set_mute", "set_effect"]
 
 VERSION = "0.6"
-SUPPORTED_SYSTEM_PRODUCT_NAMES = [
-    "W230SS",  # Clevo W230SS
-    "Mythlogic Chaos 1313-A",  # Mythlogic Chaos 1313-A
-    "HUMA H3",  # MONSTER HUMA H3
-    "M4",  # Eurocom M4
-    "W230SD",  # Clevo W230SD
+SUPPORTED_BASEBOARD_PRODUCT_NAMES = [
+    "W230SS", "W230SD"
 ]
 SUPPORTED_I2C_BUS_NAMES = ["SMBus I801 adapter at f040"]
 I2C_CLASS_PATH = "/sys/class/i2c-dev"
@@ -186,10 +182,10 @@ class SMBus:
         os.close(self._fd)
 
 
-def get_system_product_name():
+def get_baseboard_product_name():
     try:
         name = subprocess.check_output([DMIDECODE_EXECUTABLE, "-s",
-                                       "system-product-name"])
+                                       "baseboard-product-name"])
         return name.strip().decode(locale.getpreferredencoding())
     except subprocess.CalledProcessError as e:
         dbg_err("dmidecode returned non-zero exit status")
@@ -199,10 +195,15 @@ def get_system_product_name():
         raise e
 
 
-def check_system_product_name():
-    system_product_name = get_system_product_name()
-    if system_product_name not in SUPPORTED_SYSTEM_PRODUCT_NAMES:
-        dbg_err("Unsupported system (%s)" % system_product_name)
+def check_baseboard_product_name():
+    baseboard_product_name = get_baseboard_product_name()
+    found = False
+    for supported_baseboard_product_name in SUPPORTED_BASEBOARD_PRODUCT_NAMES:
+        if supported_baseboard_product_name == baseboard_product_name:
+            found = True
+            break
+    if not found:
+        dbg_err("Unsupported system (%s)" % baseboard_product_name)
         raise RuntimeError("Unsupported system")
 
 
@@ -256,7 +257,7 @@ def get_i2c_busses():
 
 def get_bus():
     check_root()
-    check_system_product_name()
+    check_baseboard_product_name()
     check_cmdline()
     check_modules()
     i2c_busses = get_i2c_busses()
