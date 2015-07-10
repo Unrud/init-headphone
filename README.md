@@ -4,6 +4,15 @@ Can initialize the device if headphones are not working after suspend.
 
 ## Supported models
 ```x is used as wildcard```
+* N1xxSD
+* P37xSM-A
+* P65xSE
+* P770ZM
+* W130SV
+* W230SD
+* W230SS
+* W25CSx
+* W330AU
 * W330SU2
 * W355SDQ
 * W3xxSS
