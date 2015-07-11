@@ -52,7 +52,7 @@ usage: init-headphone [-h] [-v] [-f] [command]
 Manage the headphone amplifier found in some Clevo laptops
 (see the list of supported models below)
 
-version: 0.7
+version: 0.8
 
 positional arguments:
   command        see the list of available commands below, init is the default
