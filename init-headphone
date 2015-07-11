@@ -9,6 +9,7 @@ import locale
 import functools
 import logging
 import argparse
+import traceback
 
 __all__ = ["init", "set_mute", "set_effect", "recovery"]
 
@@ -357,5 +358,6 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        logging.exception("Operation failed")
+        logging.error("Operation failed")
+        logging.debug("Exception occurred:\n%s" % traceback.format_exc())
         exit(1)
