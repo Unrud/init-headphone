@@ -30,7 +30,6 @@ CMDLINE_PATH = "/proc/cmdline"
 KERNEL_PARAMETER = "acpi_enforce_resources=lax"
 MODULES_PATH = "/proc/modules"
 REQUIRED_MODULES = ["i2c_dev", "i2c_i801"]
-DMIDECODE_EXECUTABLE = "dmidecode"
 DEVICE_ADDRESS = 0x73
 DATA_DISABLE_OUTPUT = [
 #    CMD   Value
@@ -141,41 +140,6 @@ class SMBus(object):
         os.close(self.__fd)
 
 
-def get_baseboard_product_name():
-    try:
-        name = subprocess.check_output([DMIDECODE_EXECUTABLE, "-s",
-                                       "baseboard-product-name"])
-        return name.strip().decode(locale.getpreferredencoding())
-    except subprocess.CalledProcessError as e:
-        logging.error("dmidecode returned non-zero exit status")
-        raise e
-    except Exception as e:
-        logging.error("dmidecode not found")
-        raise e
-
-
-def check_baseboard_product_name():
-    def compare_with_wildcards(supported_name, name):
-        if len(supported_name) != len(name):
-            return False
-        for i in range(len(supported_name)):
-            if supported_name[i] == "x":
-                continue
-            if supported_name[i] != name[i]:
-                return False
-        return True
-
-    name = get_baseboard_product_name()
-    found = False
-    for supported_name in SUPPORTED_BASEBOARD_PRODUCT_NAMES:
-        if compare_with_wildcards(supported_name, name):
-            found = True
-            break
-    if not found:
-        logging.error("Unsupported system (%s)" % name)
-        raise RuntimeError("Unsupported system")
-
-
 def check_root():
     if os.geteuid() != 0:
         logging.warning("This program needs root privileges")
@@ -224,12 +188,8 @@ def get_i2c_busses():
     return busses
 
 
-def do_checks_and_get_i2c_bus(skip_model_check=False):
+def do_checks_and_get_i2c_bus():
     check_root()
-    if skip_model_check:
-        logging.warning("Skipping model check")
-    else:
-        check_baseboard_product_name()
     check_cmdline()
     check_modules()
     i2c_busses = get_i2c_busses()
@@ -252,8 +212,8 @@ def prolog(i2c_bus):
         i2c_bus.write_byte_data(device_cmd, value)
 
 
-def write_data_to_device(data, skip_model_check=False):
-    i2c_bus = do_checks_and_get_i2c_bus(skip_model_check)
+def write_data_to_device(data):
+    i2c_bus = do_checks_and_get_i2c_bus()
     try:
         i2c_bus.address = DEVICE_ADDRESS
         prolog(i2c_bus)
@@ -263,29 +223,28 @@ def write_data_to_device(data, skip_model_check=False):
         i2c_bus.close()
 
 
-def init(skip_model_check=False):
-    set_effect(DEFAULT_EFFECT, skip_model_check)
+def init():
+    set_effect(DEFAULT_EFFECT)
 
 
-def set_mute(b, skip_model_check=False):
+def set_mute(b):
     if b:
-        write_data_to_device(DATA_DISABLE_OUTPUT, skip_model_check)
+        write_data_to_device(DATA_DISABLE_OUTPUT)
     else:
-        write_data_to_device(DATA_ENABLE_OUTPUT, skip_model_check)
+        write_data_to_device(DATA_ENABLE_OUTPUT)
 
 
-def set_effect(i, skip_model_check=False):
+def set_effect(i):
     if i < 0 or i >= len(DATA_EFFECTS):
         logging.error("Invalid effect")
         raise ValueError("Invalid effect")
     write_data_to_device(DATA_DISABLE_OUTPUT +
                          DATA_EFFECTS[i] +
-                         DATA_ENABLE_OUTPUT,
-                         skip_model_check)
+                         DATA_ENABLE_OUTPUT)
 
 
-def recovery(skip_model_check=False):
-    write_data_to_device(DATA_RECOVERY, skip_model_check)
+def recovery():
+    write_data_to_device(DATA_RECOVERY)
 
 
 def parse_args():
@@ -322,10 +281,11 @@ def parse_args():
         description='Manage the headphone amplifier found in some Clevo laptops\n'
                     '(see the list of supported models below)\n\n'
                     'version: %s' % VERSION, epilog=epilog)
+    parser.add_argument("--version", action="version", version="%(prog)s " + VERSION)
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                         action="store_true")
-    parser.add_argument("-f", "--force", help="skip model check",
-                        action="store_true")
+    parser.add_argument("-f", "--force", action="store_true",
+                        help="for compatibility with previous versions")
     parser.add_argument("command", nargs="?", choices=commands, metavar="command",
                         default="init",
                         help="see the list of available commands below, "
@@ -340,18 +300,17 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
     logging.info("version %s" % VERSION)
     command = args.command
-    skip_model_check = args.force
     if command == "init":
-        init(skip_model_check)
+        init()
     elif command.startswith("effect"):
         i = int(command[len("effect"):])
-        set_effect(i, skip_model_check)
+        set_effect(i)
     elif command == "mute":
-        set_mute(True, skip_model_check)
+        set_mute(True)
     elif command == "unmute":
-        set_mute(False, skip_model_check)
+        set_mute(False)
     elif command == "recovery":
-        recovery(skip_model_check)
+        recovery()
 
 
 if __name__ == "__main__":
