@@ -294,6 +294,8 @@ def main():
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
     logging.info("version %s" % VERSION)
+    if args.force:
+        logging.warning("The -f, --force argument is deprecated")
     command = args.command
     if command == "init":
         init()
