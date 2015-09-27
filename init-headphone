@@ -11,7 +11,7 @@ import traceback
 
 __all__ = ["init", "set_mute", "set_effect", "recovery"]
 
-VERSION = "0.8"
+VERSION = "0.9"
 SUPPORTED_BASEBOARD_PRODUCT_NAMES = [
 #   x is used as wildcard
     "N1xxSD", "P37xSM-A", "P65xSE", "P770ZM", "W130SV", "W230SD", "W230SS",
