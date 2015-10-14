@@ -205,13 +205,19 @@ def do_checks_and_get_i2c_bus():
     check_modules()
     i2c_busses = get_i2c_busses()
     selected_i2c_dev = None
+    selected_i2c_bus_name = None
+    logging.debug("Available i2c busses: %s" % list(map(lambda a: a[0],
+                                                        i2c_busses)))
+    logging.debug("Supported i2c bus names: %s" % SUPPORTED_I2C_BUS_NAMES)
     for i2c_bus_name, i2c_dev in i2c_busses:
         for supported_name in SUPPORTED_I2C_BUS_NAMES:
             if supported_name in i2c_bus_name:
                 selected_i2c_dev = i2c_dev
+                selected_i2c_bus_name = i2c_bus_name
     if selected_i2c_dev is None:
         logging.error("Can't find i2c bus")
         raise RuntimeError("Can't find i2c bus")
+    logging.debug("Selected i2c bus: %s" % selected_i2c_bus_name)
     i2c_dev_path = os.path.join(DEV_PATH, selected_i2c_dev)
     i2c_bus = SMBus(i2c_dev_path)
     return i2c_bus
