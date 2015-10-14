@@ -2,6 +2,8 @@
 Manage the headphone amplifier found in some Clevo laptops.
 Can initialize the device if headphones are not working after suspend.
 
+**There are packages for [Arch Linux](https://aur.archlinux.org/packages/init-headphone/), [Fedora](https://github.com/letitz/init-headphone/releases) and [Ubuntu](https://github.com/Unrud/init-headphone-ubuntu/releases)**
+
 ## Supported models
 ```x is used as wildcard```
 * N1xxSD
@@ -41,8 +43,6 @@ Can initialize the device if headphones are not working after suspend.
 * WA50SBQ
 * WA50SFQ
 * WA50SJQ
-
-**There are packages for [Arch Linux](https://aur.archlinux.org/packages/init-headphone/), [Fedora](https://github.com/letitz/init-headphone/releases) and [Ubuntu](https://github.com/Unrud/init-headphone-ubuntu/releases)**
 
 ## Usage
 ```
