@@ -6,43 +6,46 @@ Can initialize the device if headphones are not working after suspend.
 
 ## Supported models
 ```x is used as wildcard```
-* N1xxSD
-* P37xSM-A
+* N151SD/N155SD/N170SD/N150SC/N151SC/N155SC
+* P15xSM-A/P17xSM-A Series
+* P370SM-A/P375SM-A/P377SM-A Series
 * P65xSE
-* P770ZM
 * W130SV
 * W230SD
 * W230SS
-* W25CSx
+* W25CSV/W25CSW
 * W330AU
 * W330SU2
 * W355SDQ
-* W3xxSS
+* W35xSSQ/W37xSS Series
 * W510TU
 * W510TU-L
+* W51xLU/-C
 * W5xxSU2
-* W650SF
-* W670SFQ
-* W6xxSB
+* W650SB/W655SB/W670SBQ/W670SBQ1 Series
+* W65xSF Series
+* W65xSJ Series
+* W67xSFQ Series
+* W67xSJQ Series
 * W840AU
-* W942SV
-* W942SW
+* W940AU/W941AU-T/W945AU/W950AU/W955AU Series
+* W940TU/W945TU Series
+* W942SV/W942SV1
+* W942SW/W942SW1
 * W945SUW
-* W94xTU
+* W94xKU/W95xKU
+* W94xLU/-C/W95xLU/-C/W970LU
+* W94xSU1
+* W94xSU2/W95xSU2/W945SUY
 * W94xTU-L
-* W95xTU
+* W95xKL Series
+* W95xTU Series
 * W970KLQ
-* W970SUW
 * W970SUY
 * W970TUQ
-* W9xxAUx
-* W9xxKL
-* W9xxKU
-* W9xxSU1
-* W9xxSU2
 * WA50SBQ
-* WA50SFQ
-* WA50SJQ
+* WA50SFQ Series
+* WA50SJQ Series
 
 ## Usage
 ```
