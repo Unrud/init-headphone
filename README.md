@@ -5,6 +5,8 @@ Can initialize the device if headphones are not working after suspend.
 **There are packages for [Arch Linux](https://aur.archlinux.org/packages/init-headphone/), [Fedora](https://github.com/letitz/init-headphone/releases) and [Ubuntu](https://github.com/Unrud/init-headphone-ubuntu/releases)**
 
 ## Supported models
+This list is subject to change. If the headphone jack is not working after suspend, the model is probably supported.
+
 ```x is used as wildcard```
 * N151SD/N155SD/N170SD/N150SC/N151SC/N155SC
 * P15xSM-A/P17xSM-A Series
