@@ -168,7 +168,10 @@ def check_modules():
     loaded_modules = [line.split()[0] for line in modules_file.readlines()]
     for required_module in REQUIRED_MODULES:
         if required_module not in loaded_modules:
-            logging.warning("Module is not loaded: %s" % required_module)
+            logging.info("Autoload modules: %s" % required_module)
+            result = subprocess.call(['modprobe', required_module])
+            if result != 0:
+                logging.warn("  Failed to load modules: %s" % required_module)
 
 
 def get_i2c_busses():
