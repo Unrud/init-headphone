@@ -52,10 +52,9 @@ This list is subject to change. If the headphone jack is not working after suspe
 ## Usage
 ```
 $ init-headphone --help
-usage: init-headphone [-h] [-v] [-f] [command]
+usage: init-headphone [-h] [--version] [-v] [-f] [command]
 
 Manage the headphone amplifier found in some Clevo laptops
-(see the list of supported models below)
 
 positional arguments:
   command        see the list of available commands below, init is the default
@@ -63,8 +62,9 @@ positional arguments:
 
 optional arguments:
   -h, --help     show this help message and exit
+  --version      show program's version number and exit
   -v, --verbose  increase output verbosity
-  -f, --force    skip model check
+  -f, --force    for compatibility with previous versions
 
 available commands:
   init           initialize amplifier (with effect1)
@@ -78,11 +78,4 @@ available commands:
   mute           turn output off
   unmute         turn output on
   recovery
-
-supported models:
-  N1xxSD, P37xSM-A, P65xSE, P770ZM, W130SV, W230SD, W230SS, W25CSx, W330AU, 
-  W330SU2, W355SDQ, W3xxSS, W510TU, W510TU-L, W5xxSU2, W650SF, W670SFQ, W6xxSB, 
-  W840AU, W942SV, W942SW, W945SUW, W94xTU, W94xTU-L, W95xTU, W970KLQ, W970SUW, 
-  W970SUY, W970TUQ, W9xxAUx, W9xxKL, W9xxKU, W9xxSU1, W9xxSU2, WA50SBQ, 
-  WA50SFQ, WA50SJQ
 ```
