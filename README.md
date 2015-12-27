@@ -4,6 +4,37 @@ Can initialize the device if headphones are not working after suspend.
 
 **There are packages for [Arch Linux](https://aur.archlinux.org/packages/init-headphone/), [Fedora](https://github.com/letitz/init-headphone/releases) and [Ubuntu](https://github.com/Unrud/init-headphone-ubuntu/releases)**
 
+## Usage
+```
+$ init-headphone --help
+usage: init-headphone [-h] [--version] [-v] [-f] [command]
+
+Manage the headphone amplifier found in some Clevo laptops
+
+positional arguments:
+  command        see the list of available commands below, init is the default
+                 if the argument is omitted
+
+optional arguments:
+  -h, --help     show this help message and exit
+  --version      show program's version number and exit
+  -v, --verbose  increase output verbosity
+  -f, --force    for compatibility with previous versions
+
+available commands:
+  init           initialize amplifier (with effect1)
+  effect0        no change
+  effect1        bass boost
+  effect2
+  effect3
+  effect4        boost everything
+  effect5
+  effect6
+  mute           turn output off
+  unmute         turn output on
+  recovery
+```
+
 ## Supported models
 This list is subject to change. If the headphone jack is not working after suspend, the model is probably supported.
 
@@ -48,34 +79,3 @@ This list is subject to change. If the headphone jack is not working after suspe
 * WA50SBQ
 * WA50SFQ Series
 * WA50SJQ Series
-
-## Usage
-```
-$ init-headphone --help
-usage: init-headphone [-h] [--version] [-v] [-f] [command]
-
-Manage the headphone amplifier found in some Clevo laptops
-
-positional arguments:
-  command        see the list of available commands below, init is the default
-                 if the argument is omitted
-
-optional arguments:
-  -h, --help     show this help message and exit
-  --version      show program's version number and exit
-  -v, --verbose  increase output verbosity
-  -f, --force    for compatibility with previous versions
-
-available commands:
-  init           initialize amplifier (with effect1)
-  effect0        no change
-  effect1        bass boost
-  effect2
-  effect3
-  effect4        boost everything
-  effect5
-  effect6
-  mute           turn output off
-  unmute         turn output on
-  recovery
-```
