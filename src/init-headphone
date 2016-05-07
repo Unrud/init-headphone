@@ -19,7 +19,6 @@ import argparse
 import ctypes
 import logging
 import os
-import subprocess
 import traceback
 
 __all__ = ["init", "set_mute", "set_effect", "recovery"]
@@ -34,16 +33,16 @@ MODULES_PATH = "/proc/modules"
 REQUIRED_MODULES = ["i2c_dev", "i2c_i801"]
 DEVICE_ADDRESS = 0x73
 DATA_DISABLE_OUTPUT = [
-#    CMD   Value
+    # CMD Value
     [0x00, 0x86],
 ]
 DATA_ENABLE_OUTPUT = [
-#    CMD   Value
+    # CMD Value
     [0x00, 0x82],
 ]
-DATA_EFFECTS = list(map(lambda a: list(zip([0x04, 0x05, 0x07, 0x08, 0x09], a)), [
-#    Values for CMD
-#    0x04  0x05  0x07  0x08  0x09
+DATA_EFFECTS = [list(zip([0x04, 0x05, 0x07, 0x08, 0x09], x)) for x in [
+    # Values for CMD
+    #0x04  0x05  0x07  0x08  0x09
     [0x11, 0x02, 0x22, 0x82, 0x22],
     [0xee, 0x03, 0x40, 0x84, 0xff],
     [0xaa, 0x23, 0x40, 0x84, 0x00],
@@ -51,14 +50,14 @@ DATA_EFFECTS = list(map(lambda a: list(zip([0x04, 0x05, 0x07, 0x08, 0x09], a)), 
     [0x88, 0x03, 0x23, 0x82, 0x22],
     [0xaa, 0x23, 0x41, 0x84, 0x00],
     [0xaa, 0x02, 0x43, 0x82, 0x00],
-]))
+]]
 EFFECTS_INFO = {
     0: "no change",
     1: "bass boost",
     4: "boost everything",
 }
 DATA_RECOVERY = [
-#    CMD   Value
+    # CMD Value
     [0x0b, 0x82],
     [0x0b, 0x92],
 ]
@@ -87,14 +86,20 @@ class i2c_smbus_ioctl_data(ctypes.Structure):
 class SMBus(object):
     def __init__(self, path):
         self.__logger = logging.getLogger("SMBus")
-        self.__logger.info("Opening I2C bus: %s" % path)
+        self.__logger.info("Opening I2C bus: %s", path)
         try:
             self.__fd = os.open(path, os.O_RDWR)
-        except Exception as e:
-            self.__logger.error("Can't open file: %s" % path)
-            raise e
+        except:
+            self.__logger.error("Can't open file: %s", path)
+            raise
         self.__libc = ctypes.cdll.LoadLibrary("libc.so.6")
         self.__address = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _type, value, _traceback):
+        self.close()
 
     @property
     def address(self):
@@ -102,7 +107,7 @@ class SMBus(object):
 
     @address.setter
     def address(self, address):
-        self.__logger.info("Setting I2C slave address: %d" % address)
+        self.__logger.info("Setting I2C slave address: %d", address)
         if self.__address != address:
             err = self.__libc.ioctl(self.__fd, I2C_SLAVE, address)
             if err != 0:
@@ -125,7 +130,9 @@ class SMBus(object):
             raise RuntimeError("Can't transfer data on I2C bus")
 
     def write_byte_data(self, device_cmd, value):
-        self.__logger.info("Writing byte data on I2C bus: (device_cmd: 0x%x, value: 0x%x)" % (device_cmd, value))
+        self.__logger.info("Writing byte data on I2C bus: "
+                           "(device_cmd: 0x%x, value: 0x%x)",
+                           device_cmd, value)
         data = i2c_smbus_data()
         data.byte = value
         self.__access(I2C_SMBUS_WRITE, device_cmd, I2C_SMBUS_BYTE_DATA, data)
@@ -134,7 +141,9 @@ class SMBus(object):
         data = i2c_smbus_data()
         self.__access(I2C_SMBUS_READ, device_cmd, I2C_SMBUS_BYTE_DATA, data)
         result = data.byte & 0xff
-        self.__logger.info("Read byte data on I2C bus: (device_cmd: 0x%x, value: 0x%x)" % (device_cmd, result))
+        self.__logger.info("Read byte data on I2C bus: "
+                           "(device_cmd: 0x%x, value: 0x%x)",
+                           device_cmd, result)
         return result
 
     def close(self):
@@ -149,44 +158,43 @@ def check_root():
 
 def check_cmdline():
     try:
-        cmdline_file = open(CMDLINE_PATH, "r")
-    except:
-        logging.warning("Can't open file: %s" % CMDLINE_PATH)
+        with open(CMDLINE_PATH, "r") as f:
+            cmdline_parameters = f.read().split()
+    except IOError:
+        logging.warning("Can't open file: %s", CMDLINE_PATH)
         return
-    cmdline_parameters = cmdline_file.read().split()
-    cmdline_file.close()
     if KERNEL_PARAMETER not in cmdline_parameters:
-        logging.warning("Kernel parameter is missing: %s" % KERNEL_PARAMETER)
+        logging.warning("Kernel parameter is missing: %s", KERNEL_PARAMETER)
 
 
 def check_modules():
     try:
-        modules_file = open(MODULES_PATH, "r")
-    except:
+        with open(MODULES_PATH, "r") as f:
+            loaded_modules = [line.split()[0] for line in f.readlines()]
+    except IOError:
         logging.warning("Can't open file: %s")
         return
-    loaded_modules = [line.split()[0] for line in modules_file.readlines()]
     for required_module in REQUIRED_MODULES:
         if required_module not in loaded_modules:
-            logging.warning("Module is not loaded: %s" % required_module)
+            logging.warning("Module is not loaded: %s", required_module)
 
 
 def get_i2c_busses():
     busses = []
     try:
         i2c_directories = os.listdir(I2C_CLASS_PATH)
-    except Exception as e:
-        logging.error("Can't list directory: %s" % I2C_CLASS_PATH)
-        raise e
+    except IOError:
+        logging.error("Can't list directory: %s", I2C_CLASS_PATH)
+        raise
     for i2c_dev in i2c_directories:
         path = os.path.join(I2C_CLASS_PATH, i2c_dev, "name")
         try:
-            with open(path) as name_file:
-                i2c_dev_name = name_file.read().strip()
-        except Exception as e:
-            logging.warning("Can't open file: %s" % path)
+            with open(path) as f:
+                i2c_bus_name = f.read().strip()
+        except IOError:
+            logging.warning("Can't open file: %s", path)
             continue
-        busses.append((i2c_dev_name, i2c_dev))
+        busses.append((i2c_bus_name, i2c_dev))
     return busses
 
 
@@ -197,24 +205,21 @@ def do_checks_and_get_i2c_bus():
     i2c_busses = get_i2c_busses()
     selected_i2c_dev = None
     selected_i2c_bus_name = None
-    logging.debug("Available i2c busses: %s" % list(map(lambda a: a[0],
-                                                        i2c_busses)))
-    logging.debug("Supported i2c bus names: %s" % SUPPORTED_I2C_BUS_NAMES)
+    logging.debug("Available i2c busses: %s", [x[0] for x in i2c_busses])
+    logging.debug("Supported i2c bus names: %s", SUPPORTED_I2C_BUS_NAMES)
     for i2c_bus_name, i2c_dev in i2c_busses:
         for supported_name in SUPPORTED_I2C_BUS_NAMES:
             if supported_name in i2c_bus_name:
                 selected_i2c_dev = i2c_dev
                 selected_i2c_bus_name = i2c_bus_name
-    if selected_i2c_dev is None:
+    if not selected_i2c_dev:
         logging.error("Can't find i2c bus")
         raise RuntimeError("Can't find i2c bus")
-    logging.debug("Selected i2c bus: %s" % selected_i2c_bus_name)
-    i2c_dev_path = os.path.join(DEV_PATH, selected_i2c_dev)
-    i2c_bus = SMBus(i2c_dev_path)
-    return i2c_bus
+    logging.debug("Selected i2c bus: %s", selected_i2c_bus_name)
+    return SMBus(os.path.join(DEV_PATH, selected_i2c_dev))
 
 
-def prolog(i2c_bus):
+def write_prolog(i2c_bus):
     i2c_bus.write_byte_data(0x0a, 0x41)
     for device_cmd in [0x04, 0x09]:
         value = i2c_bus.read_byte_data(device_cmd)
@@ -222,22 +227,19 @@ def prolog(i2c_bus):
 
 
 def write_data_to_device(data):
-    i2c_bus = do_checks_and_get_i2c_bus()
-    try:
+    with do_checks_and_get_i2c_bus() as i2c_bus:
         i2c_bus.address = DEVICE_ADDRESS
-        prolog(i2c_bus)
+        write_prolog(i2c_bus)
         for device_cmd, device_data in data:
             i2c_bus.write_byte_data(device_cmd, device_data)
-    finally:
-        i2c_bus.close()
 
 
 def init():
     set_effect(DEFAULT_EFFECT)
 
 
-def set_mute(b):
-    if b:
+def set_mute(value):
+    if value:
         write_data_to_device(DATA_DISABLE_OUTPUT)
     else:
         write_data_to_device(DATA_ENABLE_OUTPUT)
@@ -275,14 +277,17 @@ def parse_args():
             epilog += "  %s\n" % command
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="Manage the headphone amplifier found in some Clevo laptops", epilog=epilog)
-    parser.add_argument("--version", action="version", version="%(prog)s " + VERSION)
+        description="Manage the headphone amplifier found in some "
+                    "Clevo laptops",
+        epilog=epilog)
+    parser.add_argument("--version", action="version",
+                        version="%%(prog)s %s" % VERSION)
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                         action="store_true")
     parser.add_argument("-f", "--force", action="store_true",
                         help="for compatibility with previous versions")
-    parser.add_argument("command", nargs="?", choices=commands, metavar="command",
-                        default="init",
+    parser.add_argument("command", nargs="?", choices=commands,
+                        metavar="command", default="init",
                         help="see the list of available commands below, "
                              "init is the default if the argument is omitted")
     args = parser.parse_args()
@@ -293,7 +298,7 @@ def main():
     args = parse_args()
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    logging.info("Version: %s" % VERSION)
+    logging.info("Version: %s", VERSION)
     if args.force:
         logging.warning("The -f, --force argument is deprecated")
     command = args.command
@@ -313,7 +318,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
+    except Exception:
         logging.error("Operation failed")
-        logging.debug("Exception occurred:\n%s" % traceback.format_exc())
+        logging.debug("Exception occurred:\n%s", traceback.format_exc())
         exit(1)
