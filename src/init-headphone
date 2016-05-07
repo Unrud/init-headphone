@@ -88,11 +88,15 @@ class SMBus(object):
         self.__logger = logging.getLogger("SMBus")
         self.__logger.info("Opening I2C bus: %s", path)
         try:
+            self.__libc = ctypes.cdll.LoadLibrary("libc.so.6")
+        except:
+            self.__logger.error("Can't load library: %s", "libc.so.6")
+            raise
+        try:
             self.__fd = os.open(path, os.O_RDWR)
         except:
             self.__logger.error("Can't open file: %s", path)
             raise
-        self.__libc = ctypes.cdll.LoadLibrary("libc.so.6")
         self.__address = None
 
     def __enter__(self):
