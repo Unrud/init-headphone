@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [ ! -x /usr/sbin/init-headphone ]; then
+    exit 0
+fi
+
+case $1 in
+     resume|thaw)
+        /usr/sbin/init-headphone
+        ;;
+esac
