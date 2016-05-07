@@ -176,7 +176,7 @@ def check_modules():
         with open(MODULES_PATH, "r") as f:
             loaded_modules = [line.split()[0] for line in f.readlines()]
     except IOError:
-        logging.warning("Can't open file: %s")
+        logging.warning("Can't open file: %s", MODULES_PATH)
         return
     for required_module in REQUIRED_MODULES:
         if required_module not in loaded_modules:
