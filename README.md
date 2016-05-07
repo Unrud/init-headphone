@@ -7,7 +7,7 @@ Can initialize the device if headphones are not working after suspend.
 ## Usage
 ```
 $ init-headphone --help
-usage: init-headphone [-h] [--version] [-v] [-f] [command]
+usage: init-headphone [-h] [--version] [-v] [command]
 
 Manage the headphone amplifier found in some Clevo laptops
 
@@ -19,7 +19,6 @@ optional arguments:
   -h, --help     show this help message and exit
   --version      show program's version number and exit
   -v, --verbose  increase output verbosity
-  -f, --force    for compatibility with previous versions
 
 available commands:
   init           initialize amplifier (with effect1)
