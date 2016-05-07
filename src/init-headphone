@@ -264,7 +264,7 @@ def recovery():
 
 def parse_args():
     commands_help = {
-        "init": "initialize amplifier (with effect1)",
+        "init": "initialize amplifier (with effect%d)" % DEFAULT_EFFECT,
         "mute": "turn output off",
         "unmute": "turn output on",
     }
