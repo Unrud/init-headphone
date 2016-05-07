@@ -13,7 +13,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Copyright 2015 Unrud <unrud@openaliasbox.org>
+# Copyright 2015-2016 Unrud <unrud@openaliasbox.org>
 
 import argparse
 import ctypes
