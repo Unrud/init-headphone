@@ -6,7 +6,7 @@ After=hybrid-sleep.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/sbin/init-headphone
+ExecStart=/usr/local/sbin/init-headphone
 
 [Install]
 WantedBy=suspend.target
