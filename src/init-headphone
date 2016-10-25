@@ -116,7 +116,7 @@ class SMBus(object):
             err = self.__libc.ioctl(self.__fd, I2C_SLAVE, address)
             if err != 0:
                 self.__logger.error("Can't set I2C slave address")
-                raise RuntimeError("Can't set I2C slave address")
+                raise OSError(err, os.strerror(err))
             self.__address = address
 
     def __access(self, read_write, device_cmd, size, data):
@@ -131,7 +131,7 @@ class SMBus(object):
         err = self.__libc.ioctl(self.__fd, I2C_SMBUS, ctypes.byref(args))
         if err != 0:
             self.__logger.error("Can't transfer data on I2C bus")
-            raise RuntimeError("Can't transfer data on I2C bus")
+            raise OSError(err, os.strerror(err))
 
     def write_byte_data(self, device_cmd, value):
         self.__logger.info("Writing byte data on I2C bus: "
