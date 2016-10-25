@@ -20,6 +20,7 @@ import ctypes
 import logging
 import os
 import subprocess
+import sys
 import traceback
 
 __all__ = ["init", "set_mute", "set_effect", "recovery"]
@@ -317,7 +318,35 @@ def main():
         recovery()
 
 
+class ColorStreamHandler(logging.StreamHandler):
+    def emit(self, record):
+        try:
+            FORMAT_SEQ = "\033[%dm"
+            fmt = 0 # reset
+            if record.levelno >= logging.ERROR:
+                fmt = 31 # red
+            elif record.levelno >= logging.WARNING:
+                fmt = 33 # yellow
+            msg = self.format(record)
+            if hasattr(self.stream, 'isatty') and self.stream.isatty():
+                fs = (FORMAT_SEQ + "%s" + FORMAT_SEQ + "\n") % (fmt, msg, 0)
+            else:
+                fs = "%s\n" % msg
+            self.stream.write(fs)
+            self.flush()
+        except Exception:
+            self.handleError(record)
+
+
+def setup_logging():
+    ch = ColorStreamHandler(sys.stderr)
+    fmt = logging.Formatter('%(levelname)s:%(message)s')
+    ch.setFormatter(fmt)
+    logging.getLogger().addHandler(ch)
+
+
 if __name__ == "__main__":
+    setup_logging()
     try:
         main()
     except Exception:
