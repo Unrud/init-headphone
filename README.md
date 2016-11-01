@@ -34,6 +34,15 @@ available commands:
   recovery
 ```
 
+## Troubleshoot
+
+  * Run **init-headphone** with the ``--verbose`` argument.
+  * Use ``dmesg | grep i801`` to check for problems with the SMBus driver.
+  * List all i2c busses with ``i2cdetect -l`` to find the full name of the bus
+    **SMBus I801 adapter...**. Use that name as a argument for **i2cdetect**
+    like ``i2cdetect "SMBus I801 adapter at f040"``. This should show the
+    headphone amplifier at address 0x73.
+
 ## Supported models
 This list is subject to change. If the headphone jack is not working after suspend, the model is probably supported.
 
