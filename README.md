@@ -57,6 +57,9 @@ It talks directly to the SMBus controller.
 ``Set_effect(int)`` to control the headphone amplifier which is connected to the
 SMBus.
 
+If you are interested in analyzing or running the Windows driver on Linux
+(with [Wine](https://winehq.org)) take a look at: https://github.com/Unrud/init-headphone-tools
+
 ### Supported ``dwIoControlCode``s for [DeviceIoControl](https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx)
 
 #### 0x9C402494: Enumerate PCI device
