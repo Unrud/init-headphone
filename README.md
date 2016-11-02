@@ -43,7 +43,7 @@ available commands:
     like ``i2cdetect "SMBus I801 adapter at f040"``. This should show the
     headphone amplifier at address 0x73.
 
-## Information about the Windows Driver
+## Information about the Windows driver
 
 The Windows driver consists of a kernel space component **SvThANSP.sys** and a
 user space component **hp.dll**.
