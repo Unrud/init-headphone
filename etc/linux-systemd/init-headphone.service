@@ -1,5 +1,5 @@
 [Unit]
-Description=Initialize headphone amplifier found in some Clevo laptops
+Description=Initialize headphone amplifier
 After=suspend.target
 After=hibernate.target
 After=hybrid-sleep.target
