@@ -7,6 +7,27 @@ Can initialize the device if headphones are not working after suspend.
 [Fedora](https://github.com/letitz/init-headphone/releases) and
 [Ubuntu](https://github.com/Unrud/init-headphone-ubuntu/releases)**
 
+## Installation
+
+To install just run:
+
+    ./autogen.sh
+    ./configure
+    make
+    make install
+
+If **systemd** is available, a unit file that starts the program automatically
+gets installed. To enable it run:
+
+    systemctl enable init-headphone
+
+If you are not using **systemd**, take a look at the *etc/* folder. It
+includes example configuration for **pm-utils** and **upstart** to start the
+program automatically.
+
+On older Linux versions you might have to add the kernel parameter
+``acpi_enforce_resources=lax`` to make the i2c driver work.
+
 ## Usage
 ```
 init-headphone --help
