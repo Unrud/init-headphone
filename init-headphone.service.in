@@ -1,0 +1,15 @@
+[Unit]
+Description=Initialize headphone amplifier found in some Clevo laptops
+After=suspend.target
+After=hibernate.target
+After=hybrid-sleep.target
+
+[Service]
+Type=oneshot
+ExecStart=${sbindir}/init-headphone
+
+[Install]
+WantedBy=suspend.target
+WantedBy=hibernate.target
+WantedBy=hybrid-sleep.target
+WantedBy=multi-user.target
