@@ -4,7 +4,7 @@ Can initialize the device if headphones are not working after suspend.
 
 **There are packages for
 [Arch Linux](https://aur.archlinux.org/packages/init-headphone/),
-[Fedora](https://github.com/letitz/init-headphone/releases) and
+[Fedora](https://github.com/Unrud/init-headphone-fedora/releases) and
 [Ubuntu](https://github.com/Unrud/init-headphone-ubuntu/releases)**
 
 ## Installation
