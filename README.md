@@ -148,6 +148,7 @@ suspend, the model is probably supported.
 * N151SD/N155SD/N170SD/N150SC/N151SC/N155SC
 * P15xSM-A/P17xSM-A Series
 * P370SM-A/P375SM-A/P377SM-A Series
+* P641HK1
 * P65xSE
 * W130SV
 * W230SD
