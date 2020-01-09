@@ -101,8 +101,8 @@ struct {
 }
 ```
 
-The driver reads a word from the register ``pcireg`` of the with
-``bus``, ``device`` and ``func`` specified PCI device.
+The driver reads a word from the register ``pcireg`` of the PCI device
+specified by ``bus``, ``device`` and ``func``.
 The result is returned in ``result``. If the register doesn't exist, the
 returned result is 0xffff. It's used to find the SMBus controller by
 **hp.dll**.
