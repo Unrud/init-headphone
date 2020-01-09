@@ -353,3 +353,6 @@ if __name__ == '__main__':
         logging.error('Operation failed')
         logging.debug('Exception occurred:\n%s', traceback.format_exc())
         exit(1)
+    except KeyboardInterrupt:
+        logging.error('Operation cancelled')
+        exit(1)
