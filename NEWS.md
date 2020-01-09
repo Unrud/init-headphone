@@ -1,3 +1,8 @@
+# Changes in 0.13
+
+* Detect python interpreter with build system
+* Don't print stack trace when program is cancelled
+
 # Changes in 0.12
 
   * add Autotools

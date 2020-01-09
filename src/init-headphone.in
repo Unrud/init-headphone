@@ -25,7 +25,7 @@ import traceback
 
 __all__ = ['init', 'set_mute', 'set_effect', 'recovery']
 
-VERSION = '0.12'
+VERSION = '0.13'
 SUPPORTED_I2C_BUS_NAMES = ['SMBus I801 adapter']
 I2C_CLASS_PATH = '/sys/class/i2c-dev'
 DEV_PATH = '/dev'
