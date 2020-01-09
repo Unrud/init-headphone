@@ -6,9 +6,13 @@ systemdsystemunit_DATA = \
   init-headphone.service
 endif
 
-sbin_SCRIPTS = src/init-headphone
+sbin_SCRIPTS = init-headphone
 
-CLEANFILES = init-headphone.service
+CLEANFILES = init-headphone init-headphone.service
+
+init-headphone: src/init-headphone.in Makefile
+	sed -e 's|@PYTHON[@]|$(PYTHON)|g' $< > $@
+	chmod +x $@
 
 init-headphone.service: init-headphone.service.in Makefile
 	sed -e 's|@sbindir[@]|$(sbindir)|g' $< > $@

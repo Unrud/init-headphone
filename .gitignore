@@ -49,4 +49,5 @@ m4/lt~obsolete.m4
 Makefile
 
 # Generated project files
+/init-headphone
 /init-headphone.service
