@@ -30,6 +30,7 @@ SUPPORTED_I2C_BUS_NAMES = ['SMBus I801 adapter']
 I2C_CLASS_PATH = '/sys/class/i2c-dev'
 DEV_PATH = '/dev'
 CMDLINE_PATH = '/proc/cmdline'
+MODPROBE_EXE = '@MODPROBE@'
 KERNEL_PARAMETER = 'acpi_enforce_resources=lax'
 REQUIRED_MODULES = ['i2c_dev', 'i2c_i801']
 DEVICE_ADDRESS = 0x73
@@ -176,7 +177,7 @@ def check_modules():
     try:
         for module in REQUIRED_MODULES:
             logging.info('Trying to add module to the kernel: %s', module)
-            if subprocess.call(['modprobe', '--quiet', module]) != 0:
+            if subprocess.call([MODPROBE_EXE, '--quiet', module]) != 0:
                 logging.warning('Module is not loaded: %s', module)
     except OSError:
         logging.warning('modprobe not found')

@@ -1,7 +1,9 @@
 AC_INIT([init-headphone], [0.12])
 
-AM_PATH_PYTHON([3.3],, [AM_PATH_PYTHON([2.7],, 
+AM_PATH_PYTHON([3.3],, [AM_PATH_PYTHON([2.7],,
     [AC_MSG_ERROR([python >= 3.3 or python >= 2.7 not found])])])
+AC_PATH_PROG([MODPROBE], [modprobe])
+AS_IF([test "x$MODPROBE" = "x"], [AC_MSG_ERROR([modprobe not found])])
 
 PKG_PROG_PKG_CONFIG
 AC_ARG_WITH([systemdsystemunitdir],
