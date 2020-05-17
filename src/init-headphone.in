@@ -19,6 +19,8 @@ import argparse
 import ctypes
 import logging
 import os
+import platform
+import re
 import subprocess
 import sys
 import traceback
@@ -32,6 +34,7 @@ DEV_PATH = '/dev'
 CMDLINE_PATH = '/proc/cmdline'
 MODPROBE_EXE = '@MODPROBE@'
 KERNEL_PARAMETER = 'acpi_enforce_resources=lax'
+KERNEL_PARAMETER_BEFORE_VERSION = (4, 15)
 REQUIRED_MODULES = ['i2c_dev', 'i2c_i801']
 DEVICE_ADDRESS = 0x73
 DATA_DISABLE_OUTPUT = [
@@ -163,6 +166,13 @@ def check_root():
 
 
 def check_cmdline():
+    release = platform.release()
+    try:
+        kernel_version = tuple(map(int, re.split('[.-]', release)[:2]))
+        if kernel_version >= KERNEL_PARAMETER_BEFORE_VERSION:
+            return
+    except ValueError:
+        logging.warning('Can\'t find kernel version: %s', release)
     try:
         with open(CMDLINE_PATH, 'r') as f:
             cmdline_parameters = f.read().split()
