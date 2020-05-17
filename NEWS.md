@@ -1,3 +1,8 @@
+# Changes in 0.14
+
+* Use absolute path for modprobe
+* Skip kernel parameter check for kernels >= 4.15
+
 # Changes in 0.13
 
 * Detect python interpreter with build system
