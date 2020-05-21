@@ -1,4 +1,4 @@
-AC_INIT([init-headphone], [0.12])
+AC_INIT([init-headphone], [0.14])
 
 AM_PATH_PYTHON([3.3],, [AM_PATH_PYTHON([2.7],,
     [AC_MSG_ERROR([python >= 3.3 or python >= 2.7 not found])])])

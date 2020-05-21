@@ -10,9 +10,15 @@ sbin_SCRIPTS = init-headphone
 
 CLEANFILES = init-headphone init-headphone.service
 
+do_substitutions = sed \
+	-e 's|\@sbindir\@|$(sbindir)|g' \
+	-e 's|\@PACKAGE_VERSION\@|$(PACKAGE_VERSION)|g' \
+	-e 's|\@PYTHON\@|$(PYTHON)|g' \
+	-e 's|\@MODPROBE\@|$(MODPROBE)|g'
+
 init-headphone: src/init-headphone.in Makefile
-	sed -e 's|@PYTHON[@]|$(PYTHON)|g' -e 's|@MODPROBE[@]|$(MODPROBE)|g' $< > $@
+	$(do_substitutions) $< > $@
 	chmod +x $@
 
 init-headphone.service: init-headphone.service.in Makefile
-	sed -e 's|@sbindir[@]|$(sbindir)|g' $< > $@
+	$(do_substitutions) $< > $@
